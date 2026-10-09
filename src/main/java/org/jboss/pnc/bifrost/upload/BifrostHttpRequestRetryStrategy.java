@@ -17,16 +17,17 @@
  */
 package org.jboss.pnc.bifrost.upload;
 
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLException;
+
 import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.util.TimeValue;
-
-import javax.net.ssl.SSLException;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 class BifrostHttpRequestRetryStrategy implements HttpRequestRetryStrategy {
     private final int maxRetries;

@@ -17,16 +17,15 @@
  */
 package org.jboss.pnc.bifrost.upload;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class ChecksumComputingStreamTest {
-
 
     @Test
     public void computeStringChecksums() throws IOException {
@@ -36,12 +35,12 @@ class ChecksumComputingStreamTest {
 
         String md5Sum;
         String sha512Sum;
-        try (ChecksumComputingStream checksums = ChecksumComputingStream.computeChecksums(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))) {
+        try (ChecksumComputingStream checksums = ChecksumComputingStream
+                .computeChecksums(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))) {
             md5Sum = checksums.getMD5Sum();
         }
 
         assertEquals(md5SumExpected, md5Sum.toLowerCase());
     }
-
 
 }

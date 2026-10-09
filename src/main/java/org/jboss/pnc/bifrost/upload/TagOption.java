@@ -12,7 +12,6 @@ public enum TagOption {
 
     private final String TAG_NAME;
 
-
     private TagOption(final String tagName) {
         this.TAG_NAME = tagName;
     }
