@@ -17,7 +17,6 @@
  */
 package org.jboss.pnc.bifrost.upload;
 
-import java.io.BufferedInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,7 +60,8 @@ public class ChecksumComputingStream extends FilterInputStream {
         final byte[] buffer = new byte[BUFFER_SIZE];
 
         while (true) {
-            if (read(buffer) == -1) break;
+            if (read(buffer) == -1)
+                break;
         }
     }
 

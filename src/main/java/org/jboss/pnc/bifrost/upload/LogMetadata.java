@@ -17,18 +17,18 @@
  */
 package org.jboss.pnc.bifrost.upload;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.NonNull;
+import static org.jboss.pnc.bifrost.upload.BifrostLogUploader.HEADER_PROCESS_CONTEXT;
+import static org.jboss.pnc.bifrost.upload.BifrostLogUploader.HEADER_PROCESS_CONTEXT_VARIANT;
+import static org.jboss.pnc.bifrost.upload.BifrostLogUploader.HEADER_REQUEST_CONTEXT;
+import static org.jboss.pnc.bifrost.upload.BifrostLogUploader.HEADER_TMP;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.jboss.pnc.bifrost.upload.BifrostLogUploader.HEADER_PROCESS_CONTEXT;
-import static org.jboss.pnc.bifrost.upload.BifrostLogUploader.HEADER_PROCESS_CONTEXT_VARIANT;
-import static org.jboss.pnc.bifrost.upload.BifrostLogUploader.HEADER_REQUEST_CONTEXT;
-import static org.jboss.pnc.bifrost.upload.BifrostLogUploader.HEADER_TMP;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NonNull;
 
 @Data
 @Builder
