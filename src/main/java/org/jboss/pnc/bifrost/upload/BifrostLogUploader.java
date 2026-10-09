@@ -17,7 +17,19 @@
  */
 package org.jboss.pnc.bifrost.upload;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static java.lang.String.format;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
 import org.apache.hc.client5.http.entity.GzipCompressingEntity;
 import org.apache.hc.client5.http.entity.mime.FileBody;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -36,18 +48,7 @@ import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.http.message.BasicHeader;
 import org.jboss.pnc.api.bifrost.dto.Checksums;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
-import static java.lang.String.format;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BifrostLogUploader {
     public static final String HEADER_PROCESS_CONTEXT = "log-process-context";
@@ -70,11 +71,16 @@ public class BifrostLogUploader {
     /**
      * Creates a Bifrost log uploader.
      *
-     * @param bifrostUrl   URL of bifrost host.
-     * @param maxRetries   Number of retries to perform, when then is problem with uploading the logs.
-     * @param delaySeconds Number of seconds to increase the waing time each retry. For example 10 means waiting times 10, 20, 30, 40, ...
+     * @param bifrostUrl URL of bifrost host.
+     * @param maxRetries Number of retries to perform, when then is problem with uploading the logs.
+     * @param delaySeconds Number of seconds to increase the waing time each retry. For example 10 means waiting times
+     *        10, 20, 30, 40, ...
      */
-    public BifrostLogUploader(URI bifrostUrl, Supplier<String> authHeaderValueProvider, int maxRetries, int delaySeconds) {
+    public BifrostLogUploader(
+            URI bifrostUrl,
+            Supplier<String> authHeaderValueProvider,
+            int maxRetries,
+            int delaySeconds) {
         this.bifrostUrl = bifrostUrl;
         this.bifrostUploadUrl = bifrostUrl.resolve("/final-log/upload");
 
@@ -87,7 +93,8 @@ public class BifrostLogUploader {
      */
     public void uploadFile(File logfile, LogMetadata metadata) throws BifrostUploadException {
         String md5Sum;
-        try (ChecksumComputingStream checksums = ChecksumComputingStream.computeChecksums(Files.newInputStream(logfile.toPath()))) {
+        try (ChecksumComputingStream checksums = ChecksumComputingStream
+                .computeChecksums(Files.newInputStream(logfile.toPath()))) {
             md5Sum = checksums.getMD5Sum();
         } catch (IOException e) {
             throw new BifrostUploadException("Could not compute file checksums.", e);
@@ -110,7 +117,8 @@ public class BifrostLogUploader {
      */
     public void uploadString(String log, LogMetadata metadata) throws BifrostUploadException {
         String md5Sum;
-        try (ChecksumComputingStream checksums = ChecksumComputingStream.computeChecksums(new ByteArrayInputStream(log.getBytes(StandardCharsets.UTF_8)))) {
+        try (ChecksumComputingStream checksums = ChecksumComputingStream
+                .computeChecksums(new ByteArrayInputStream(log.getBytes(StandardCharsets.UTF_8)))) {
             md5Sum = checksums.getMD5Sum();
         } catch (IOException e) {
             throw new BifrostUploadException("Could not compute file checksums.", e);
@@ -124,7 +132,9 @@ public class BifrostLogUploader {
     public void uploadString(String log, LogMetadata metadata, String md5sum) throws BifrostUploadException {
         MultipartEntityBuilder multipartEntityBuilder = prepareMetadata(metadata, md5sum);
 
-        HttpEntity formDataEntity = multipartEntityBuilder.addPart("logfile", new StringBody(log, PLAIN_UTF8_CONTENT_TYPE)).build();
+        HttpEntity formDataEntity = multipartEntityBuilder
+                .addPart("logfile", new StringBody(log, PLAIN_UTF8_CONTENT_TYPE))
+                .build();
         List<Header> headers = prepareHeaders(metadata);
         upload(formDataEntity, headers);
     }
@@ -154,7 +164,8 @@ public class BifrostLogUploader {
      *
      * The InputStream given in ReadStreamFunction is automatically closed, stream can be read directly.
      */
-    public <T> T getLogs(String processContext, String tag, ReadStreamFunction<T> readStream) throws BifrostUploadException {
+    public <T> T getLogs(String processContext, String tag, ReadStreamFunction<T> readStream)
+            throws BifrostUploadException {
         return get(processContext, tag, (response -> {
             try (InputStream inputStream = BifrostLogUploader.handleISResponse(response)) {
                 return readStream.apply(inputStream);
@@ -188,7 +199,7 @@ public class BifrostLogUploader {
     /**
      * Returns URI pointing to log endpoint given context and tag.
      */
-    public URI getLogEndpoint(String processContext, String tag)  {
+    public URI getLogEndpoint(String processContext, String tag) {
         return bifrostUrl.resolve(format("/final-log/%s/%s", processContext, tag));
     }
 
@@ -203,7 +214,8 @@ public class BifrostLogUploader {
         }
     }
 
-    private <T> T get(String processContext, String tag, HttpClientResponseHandler<T> responseHandler) throws BifrostUploadException {
+    private <T> T get(String processContext, String tag, HttpClientResponseHandler<T> responseHandler)
+            throws BifrostUploadException {
         ClassicHttpRequest request = prepareGetRequest(processContext, tag);
 
         try (CloseableHttpClient build = HttpClientBuilder.create().setRetryStrategy(retryStrategy).build()) {
@@ -256,7 +268,8 @@ public class BifrostLogUploader {
                 return true;
             } else {
                 String message = EntityUtils.toString(entity);
-                throw new BifrostUploadException("Failed to upload log to Bifrost, status " + response.getCode() + " message: " + message);
+                throw new BifrostUploadException(
+                        "Failed to upload log to Bifrost, status " + response.getCode() + " message: " + message);
             }
         } catch (IOException | ParseException e) {
             throw new BifrostUploadException("Failed to upload log to Bifrost", e);
@@ -282,7 +295,9 @@ public class BifrostLogUploader {
                 return entityHandler.apply(entity);
             } else if (response.getCode() == 204) {
 
-                throw new BifrostUploadException("Logs missing from Bifrost, status " + response.getCode() + " message: " + response.getReasonPhrase());
+                throw new BifrostUploadException(
+                        "Logs missing from Bifrost, status " + response.getCode() + " message: "
+                                + response.getReasonPhrase());
             } else {
 
                 String message;
@@ -292,7 +307,8 @@ public class BifrostLogUploader {
                     message = response.getReasonPhrase();
                 }
 
-                throw new BifrostUploadException("Failed to get checksums from Bifrost, status " + response.getCode() + " message: " + message);
+                throw new BifrostUploadException(
+                        "Failed to get checksums from Bifrost, status " + response.getCode() + " message: " + message);
             }
         } catch (IOException | ParseException e) {
             throw new BifrostUploadException("Failed to get checksums from Bifrost", e);
